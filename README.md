@@ -23,9 +23,15 @@ Amazon storefront with products using mysql and inquirer prompt npm packages
   
   To view products for sales select `View Product for Sale`
   
+  ![image alternative text](https://i.imgur.com/4oLYwWP.png)
+  
   To view products for sales select `View Low Inventory`
   
+  ![image alternative text](https://i.imgur.com/BGCeIcp.png)
+  
   To view products for sales select `Add to Inventory`
+  
+  ![image alternative text](https://i.imgur.com/iYAV6Ew.png)
   
   To view products for sales select `Add Product`
   
