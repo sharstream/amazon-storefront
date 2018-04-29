@@ -1,7 +1,7 @@
 require("dot-env");
-var mysql = require("mysql");
+let mysql = require("mysql");
 
-var connection = mysql.createConnection({
+let connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
 
@@ -13,4 +13,4 @@ var connection = mysql.createConnection({
     database: "bamazonDB"
 });
 
-module.exports = Connection;
+module.exports = connection;
