@@ -3,12 +3,17 @@
 let inquirer = require("inquirer");
 
 let connection = require("./connection.js");
+
+connection.connect(function (err) {
+    if (err) throw err;
+    console.log('connected');
+    console.log("connected as id " + connection.threadId);
+    runSearch();
+});
+
 function runSearch() {
-    connection.connect(function (err) {
-        if (err) throw err;
-        console.log('connected');
-        console.log("connected as id " + connection.threadId);
-        inquirer.prompt([
+    inquirer
+        .prompt([
             {
                 name: "choice",
                 type: "list",
@@ -20,7 +25,8 @@ function runSearch() {
                     "Add to Inventory"
                 ]
             }
-        ]).then(function (answers) {
+        ])
+        .then(function (answers) {
             switch (answers.choice) {
                 case "View Products for Sale":
                     viewProducts();
@@ -29,52 +35,17 @@ function runSearch() {
                     viewInventory();
                     break;
                 case "Add New Product":
-                    inquirer.prompt([
-                        {
-                            name: "product",
-                            type: "input",
-                            message: "Enter the product name?"
-                        },
-                        {
-                            name: "department",
-                            type: "list",
-                            message: "Select which department this product belongs?",
-                            choices: [
-                                "Amazon Fresh",
-                                "Echo & Alexa",
-                                "Electronic, Computer & Office",
-                                "Home, Garden $ Tools",
-                                "Toys, Kids & Baby"
-                            ]
-                        },
-                        {
-                            name: "price",
-                            type: "input",
-                            message: "How much cost this product?"
-                        },
-                        {
-                            name: "stock_quantity",
-                            type: "input",
-                            message: "How many?"
-                        }
-                    ]).then( (answers) => {
-                        addProduct(answers.product, answers.department, answers.price, answers.stock_quantity);
-                        connection.end();
-                    });
-                    
+                    addProduct();
                     break;
                 case "Add to Inventory":
                     addInventory();
                     break;
                 default:
                     console.log('Sorry, we are out of choice.');
+                    connection.end();
             }
-            connection.end();
         });
-    });
 }
-
-runSearch();
 
 function viewProducts() {
     connection.query(`SELECT * FROM products`, function (err, res) {
@@ -86,6 +57,7 @@ function viewProducts() {
             console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].price + " | " + res[i].stock_quantity);
         }
         console.log("--------------------------------------------------");
+        runSearch();
     });
 };
 
@@ -96,23 +68,116 @@ function viewInventory() {
         }
         console.log("-------------View Low Inventory---------------");
         for (var i = 0; i < res.length; i++) {
-            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].price + " | " + res[i].year + " | " + res[i].stock_quantity);
+            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].price + " | " + res[i].stock_quantity);
         }
         console.log("----------------------------------------------");
+        runSearch();
     });
 };
 
-function addProduct(product_name, department_name, price, stock_quantity){
-    let sql = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
-    connection.query(sql, [product_name, department_name, price, stock_quantity], (err, res) => {
-        if (err) throw err;
-        console.log("1 record inserted");
-    });
+function addProduct(){
+    inquirer
+      .prompt([
+        {
+            name: "product",
+            type: "input",
+            message: "Enter the product name?"
+        },
+        {
+            name: "department",
+            type: "list",
+            message: "Select which department this product belongs?",
+            choices: [
+                "Amazon Fresh",
+                "Echo & Alexa",
+                "Electronic, Computer & Office",
+                "Home, Garden $ Tools",
+                "Toys, Kids & Baby"
+            ]
+        },
+        {
+            name: "price",
+            type: "input",
+            message: "How much cost this product?",
+            validate: function (value) {
+                if (isNaN(value) === false) {
+                    return true;
+                }
+                return false;
+            }
+        },
+        {
+            name: "stock_quantity",
+            type: "input",
+            message: "How many?",
+            validate: function (value) {
+                if (isNaN(value) === false) {
+                    return true;
+                }
+                return false;
+            }
+        }
+      ])
+      .then((answer) => {
+        connection.query(
+            "INSERT INTO products SET ?",
+            {
+                product_name: answer.product,
+                department_name: answer.department,
+                price: answer.price,
+                stock_quantity: answer.stock_quantity
+            }
+        , (err, results, fields) => {
+            // error will be an Error if one occurred during the query
+            // results will contain the results of the query
+            // fields will contain information about the returned results fields (if any)
+            if (err) throw err;
+            console.log("product inserted");
+            console.log(results.insertId);
+            runSearch();
+        });
+      });
 }
 
 function addInventory() {
-    let sql = "";
-    connection.query(sql, () => {
-
-    });
+    connection.query("SELECT * FROM products", function (err, results){
+        inquirer
+            .prompt([{
+                    name: "choice",
+                    type: "rawlist",
+                    choices: function () {
+                        var choiceArray = [];
+                        for (var i = 0; i < results.length; i++) {
+                            choiceArray.push(results[i].product_name);
+                        }
+                        return choiceArray;
+                    },
+                    message: "Which product would you like to add more quantities?"
+                },
+                {
+                    name: "stock_quantity",
+                    type: "input",
+                    message: "How many?",
+                    validate: function (value) {
+                        if (isNaN(value) === false) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            ]).then((answer) => {
+                connection.query(
+                    "UPDATE products SET ?", [{
+                            stock_quantity: answer.stock_quantity
+                        },
+                        {
+                            item_id: chosenItem.item_id
+                        }
+                    ], (err, results, fields) => {
+                        if (err) throw err;
+                        console.log("More products added to " + chosenItem.product_name);
+                        runSearch();
+                    });
+            });
+    });  
 }
