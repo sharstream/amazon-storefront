@@ -166,12 +166,20 @@ function addInventory() {
                     }
                 }
             ]).then((answer) => {
+                let chosenItem;
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].product_name === answer.choice) {
+                        chosenItem = results[i];
+                    }
+                }
+                let add_stock = chosenItem.stock_quantity + parseInt(answer.stock_quantity);
                 connection.query(
-                    "UPDATE products SET ?", [{
-                            stock_quantity: answer.stock_quantity
+                    "UPDATE products SET ?", [
+                        {
+                            stock_quantity: add_stock
                         },
                         {
-                            item_id: chosenItem.item_id
+                            item_id: chosenItem.id
                         }
                     ], (err, results, fields) => {
                         if (err) throw err;
