@@ -29,11 +29,11 @@ Amazon storefront with products using mysql and inquirer prompt npm packages
   
   ![image alternative text](https://i.imgur.com/BGCeIcp.png)
   
-  To view products for sales select `Add to Inventory`
-  
+  To view products for sales select `Add Product`
+   
   ![image alternative text](https://i.imgur.com/iYAV6Ew.png)
   
-  To view products for sales select `Add Product`
+  To view products for sales select `Add to Inventory`
   
   <a href="https://imgflip.com/gif/29buji"><img src="https://i.imgflip.com/29buji.gif" title="made at imgflip.com"/></a>
   
